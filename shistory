@@ -9,11 +9,11 @@ print_help() {
   echo -e "\tshistory [-u username | -d days | -g | -a] [-h]\n"
   echo -e "OPTIONS"
   echo -e "\t-a,--all"
-  echo -e "\t\tShow all intermediate job steps (default: false)"
+  echo -e "\t\tShow all intermediate job steps. Default is to ignore intermediate steps."
   echo -e "\t-d,--days"
   echo -e "\t\tShow jobs over this many previous days from now (default: 7)"
   echo -e "\t-g,--gpus"
-  echo -e "\t\tShow number of allocated GPUs per node (default: false)"
+  echo -e "\t\tShow number of allocated GPUs per node. Default is to not show GPUs per node."
   echo -e "\t-u,--username"
   echo -e "\t\tSpecify the NetID of a user (default: you)\n"
   echo -e "EXAMPLES"
@@ -61,9 +61,9 @@ done
 
 # set columns to show
 if ${gpus}; then
-  FMT=jobid%16,state,start,elapsed%11,timelimit%11,ncpus%5,nnodes%6,reqmem%10,alloctres%50,partition,jobname%8;
+  FMT=jobid%16,state%10,start,elapsed%11,timelimit%11,nnodes%6,ncpus%5,reqmem%10,alloctres%50,partition,jobname%8;
 else
-  FMT=jobid%16,state,start,elapsed%11,timelimit%11,ncpus%5,nnodes%6,reqmem%10,partition,jobname%8;
+  FMT=jobid%16,state%10,start,elapsed%11,timelimit%11,nnodes%6,ncpus%5,reqmem%10,partition,jobname%8;
 fi
 
 # compute starting date of time window
@@ -72,9 +72,23 @@ now=$(date +%s);
 minusdays=$((now - $seconds));
 startdate=$(date --date=@$minusdays +'%Y-%m-%d');
 
+# below are examples of alloctres
+# billing=56,cpu=48,gres/gpu=8,mem=187.50G,node=2
+# billing=512,cpu=512,mem=800G,node=4
+# cpu=512,mem=800G,node=4
+# billing=100,cpu=4,gres/gpu=1,mem=200G,node=1
+# cpu=4,gres/gpu=1,mem=200G,node=1
+
 # use sacct to print the job history
 if ${show_all_steps}; then
     sacct -u ${username} -S ${startdate} -o ${FMT};
 else
-    sacct -u ${username} -S ${startdate} -o ${FMT} | grep -v -E '[0-9_]{4}\.(ex|ba|in)|[0-9_]{4}\.[0-9]{1,} ';
+    echo ""
+    echo "                             MM-DDTHH:MM DD-HH:MM  DD-HH:MM"
+    echo "           JobID      State        Start  Elapsed Timelimit Nodes Cores   Mem   GRES  Partition  JobName"
+    echo "       --------- ---------- ------------ -------- --------- ----- ----- ------  ----- --------- --------"
+    sacct -u ${username} -S ${startdate} -o ${FMT} -P -n | grep -v -E '[0-9_]{4}\.(ex|ba|in)|[0-9_]{4}\.[0-9]{1,}' | \
+    sed 's/billing=[0-9]\+,cpu=[0-9]\+,//' | sed 's/,*mem=[0-9]\+.*[KMGT],node=[0-9]\+//' | sed 's/Unknown/     Unknown/' | \
+    sed 's$gres/gpu=$gpu:$' | sed 's/000000Mn/Tn/' | sed 's/000Mn/Gn/' | sed 's/000Mc/Gc/' | \
+    awk -F'|' '{printf "%16s%11s%13s%9s%10s%5s%6s%8s%7s%9s%10s\n",$1,substr($2,1,9),substr($3,6,11),substr($4,1,length($4)-3),substr($5,1,length($5)-3),$6,$7,$8,$9,substr($10,1,8),substr($11,1,8)}'
 fi
