@@ -6,7 +6,7 @@ print_help() {
   echo -e "\nNAME"
   echo -e "\tshistory - show Slurm job history\n"
   echo -e "USAGE"
-  echo -e "\tshistory [-u username | -d days | -a | -c | -g | -n | -w] [-h]\n"
+  echo -e "\tshistory [-u username | -d days | -a | -c | -g | -n | -v | -w] [-h]\n"
   echo -e "OPTIONS"
   echo -e "\t-a,--all"
   echo -e "\t\tShow all intermediate job steps."
@@ -20,6 +20,8 @@ print_help() {
   echo -e "\t\tShow the nodelist for each job."
   echo -e "\t-u,--username"
   echo -e "\t\tSpecify the NetID of a user (default: you).\n"
+  echo -e "\t-v,--verbose"
+  echo -e "\t\tShow the sacct command that was used to generate the output.\n"
   echo -e "\t-w,--workdir"
   echo -e "\t\tShow the working directoring for each job."
   echo -e "EXAMPLES"
@@ -41,6 +43,7 @@ concise=false
 gpus=false
 workdir=false
 nodelist=false
+show_command=false
 
 # parse command-line arguments
 while [[ "$#" -gt 0 ]]
@@ -67,6 +70,9 @@ do
     -g|--gpus)
       gpus=true;
       ;;
+    -v|--verbose)
+      show_command=true;
+      ;;
     -w|--workdir)
       workdir=true;
       ;;
@@ -79,7 +85,7 @@ done
 
 # set columns to show
 if ${concise}; then
-  FMT=jobid%16,state%11,start,elapsed%11,nnodes%6,ncpus%5,jobname%8;
+  FMT=jobid%12,state%11,start,elapsed%11,nnodes%6,ncpus%5,jobname%8;
 else
   FMT=jobid%16,state%11,start,elapsed%11,timelimit%11,nnodes%6,ncpus%5,reqmem%10,partition,jobname%8;
 fi
@@ -104,6 +110,14 @@ startdate=$(date --date=@$minusdays +'%Y-%m-%d');
 # use sacct to print the job history
 if ${show_all_steps}; then
     sacct -u ${username} -S ${startdate} -o ${FMT};
+    if ${show_command}; then
+        echo -e "\nThe output above came from this command:"
+        echo "  sacct -u ${username} -S ${startdate} -o ${FMT}"
+    fi
 else
     sacct -u ${username} -S ${startdate} -o ${FMT} | grep -v -E '[0-9_]{4}\.(ex|ba|in)|[0-9_]{4}\.[0-9]{1,} ';
+    if ${show_command}; then
+        echo -e "\nThe output above came from this command:"
+        echo "  sacct -u ${username} -S ${startdate} -o ${FMT} | grep -v -E '[0-9_]{4}\.(ex|ba|in)|[0-9_]{4}\.[0-9]{1,} '"
+    fi
 fi
