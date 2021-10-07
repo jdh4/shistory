@@ -101,11 +101,7 @@ if ${workdir}; then
   FMT=${FMT},workdir%75
 fi
 
-# compute starting date of time window
-seconds=$(($days * 24 * 60 * 60));
-now=$(date +%s);
-minusdays=$((now - $seconds));
-startdate=$(date --date=@$minusdays +'%Y-%m-%d');
+start_date=$(date -d"${days} days ago" +%D);
 
 # use sacct to print the job history
 if ${show_all_steps}; then
@@ -115,9 +111,9 @@ if ${show_all_steps}; then
         echo "  sacct -u ${username} -S ${startdate} -o ${FMT}"
     fi
 else
-    sacct -u ${username} -S ${startdate} -o ${FMT} | grep -v -E '[0-9_]{4}\.(ex|ba|in)|[0-9_]{4}\.[0-9]{1,} ';
+    sacct -u ${username} -S ${startdate} -o ${FMT} -X;
     if ${show_command}; then
         echo -e "\nThe output above came from this command:"
-        echo "  sacct -u ${username} -S ${startdate} -o ${FMT} | grep -v -E '[0-9_]{4}\.(ex|ba|in)|[0-9_]{4}\.[0-9]{1,} '"
+        echo "  sacct -u ${username} -S ${startdate} -o ${FMT} -X"
     fi
 fi
