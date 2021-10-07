@@ -105,15 +105,15 @@ start_date=$(date -d"${days} days ago" +%D);
 
 # use sacct to print the job history
 if ${show_all_steps}; then
-    sacct -u ${username} -S ${startdate} -o ${FMT};
+    sacct -u ${username} -S ${start_date} -o ${FMT};
     if ${show_command}; then
         echo -e "\nThe output above came from this command:"
-        echo "  sacct -u ${username} -S ${startdate} -o ${FMT}"
+        echo "  sacct -u ${username} -S ${start_date} -o ${FMT}"
     fi
 else
-    sacct -u ${username} -S ${startdate} -o ${FMT} -X;
+    sacct -u ${username} -S ${start_date} -o ${FMT} -X;
     if ${show_command}; then
         echo -e "\nThe output above came from this command:"
-        echo "  sacct -u ${username} -S ${startdate} -o ${FMT} -X"
+        echo "  sacct -u ${username} -S ${start_date} -o ${FMT} -X"
     fi
 fi
