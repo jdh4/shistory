@@ -111,9 +111,9 @@ if ${show_all_steps}; then
         echo "  sacct -u ${username} -S ${start_date} -o ${FMT}"
     fi
 else
-    sacct -u ${username} -S ${start_date} -o ${FMT} -X;
+    sacct -X -u ${username} -S ${start_date} -o ${FMT};
     if ${show_command}; then
         echo -e "\nThe output above came from this command:"
-        echo "  sacct -u ${username} -S ${start_date} -o ${FMT} -X"
+        echo "  sacct -X -u ${username} -S ${start_date} -o ${FMT}"
     fi
 fi
