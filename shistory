@@ -113,10 +113,10 @@ start_date=$(date -d"${days} days ago" +%D);
 
 # features
 if ${features}; then
-  FMT=nodelist%25,jobid%20,nnodes,start,jobname,alloctres%50;
-  echo "  JobID    Node    Features   Start   JobName    AllocTRES"
+  FMT=nodelist%25,jobid%20,nnodes,state,start,jobname,alloctres%50;
+  echo "  JobID    Node    Features   State   Start   JobName    AllocTRES"
   echo "------------------------------------------------------------"
-  join -j 1 -o "1.2,1.1,2.2,1.4,1.5,1.6" \
+  join -j 1 -o "1.2,1.1,2.2,1.4,1.5,1.6,1.7" \
   <(sacct -X -n -u ${username} -S ${start_date} -o ${FMT} | grep " 1 " | grep -v "None assigned" | uniq | sort -k 1b,1) \
   <(sinfo --Node -o "%25n %f" | grep -v "HOSTNAMES" | uniq | sort -k 1b,1) | sort | tr " " '\t' | sed 's/billing=[0-9]\+,//'
   exit
